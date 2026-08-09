@@ -37,10 +37,7 @@ export default function Login({
   const signInWithGoogle = async () => {
     "use server";
     const supabase = await createClient();
-    const headersList = await headers();
-    const host = headersList.get("x-forwarded-host") || headersList.get("host");
-    const protocol = headersList.get("x-forwarded-proto") || "https";
-    const origin = `${protocol}://${host}`;
+    const origin = process.env.NEXT_PUBLIC_SITE_URL || "https://boardverseai.app";
 
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",

@@ -15,10 +15,7 @@ export default function Signup({
   const signUp = async (formData: FormData) => {
     "use server";
 
-    const headersList = await headers();
-    const host = headersList.get("x-forwarded-host") || headersList.get("host");
-    const protocol = headersList.get("x-forwarded-proto") || "https";
-    const origin = `${protocol}://${host}`;
+    const origin = process.env.NEXT_PUBLIC_SITE_URL || "https://boardverseai.app";
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
     const nextDest = formData.get("next") as string;
@@ -46,10 +43,7 @@ export default function Signup({
   const signUpWithGoogle = async () => {
     "use server";
     const supabase = await createClient();
-    const headersList = await headers();
-    const host = headersList.get("x-forwarded-host") || headersList.get("host");
-    const protocol = headersList.get("x-forwarded-proto") || "https";
-    const origin = `${protocol}://${host}`;
+    const origin = process.env.NEXT_PUBLIC_SITE_URL || "https://boardverseai.app";
 
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
