@@ -11,6 +11,8 @@ export default function Signup({
   searchParams: { message: string; next?: string };
 }) {
   const nextUrl = searchParams?.next || "";
+  const isVerifying = searchParams?.verify === "true";
+  const verifyEmail = searchParams?.email || "";
 
   const signUp = async (formData: FormData) => {
     "use server";
@@ -35,9 +37,35 @@ export default function Signup({
       return redirect(`/signup?${params.toString()}`);
     }
 
-    const params = new URLSearchParams({ message: "Check email to continue sign in process" });
+    const params = new URLSearchParams({ verify: "true", email: email });
     if (nextDest) params.set("next", nextDest);
     return redirect(`/signup?${params.toString()}`);
+  };
+
+  const verifyOtp = async (formData: FormData) => {
+    "use server";
+    const email = formData.get("email") as string;
+    const otp = formData.get("otp") as string;
+    const nextDest = formData.get("next") as string;
+    const supabase = await createClient();
+
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token: otp,
+      type: "signup",
+    });
+
+    if (error) {
+      const params = new URLSearchParams({ 
+        message: error.message,
+        verify: "true",
+        email: email,
+      });
+      if (nextDest) params.set("next", nextDest);
+      return redirect(`/signup?${params.toString()}`);
+    }
+
+    return redirect(nextDest || "/dashboard");
   };
 
   const signUpWithGoogle = async () => {
@@ -82,51 +110,86 @@ export default function Signup({
         </div>
 
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold tracking-tight text-white mb-2">Create an account</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-white mb-2">
+            {isVerifying ? "Verify your email" : "Create an account"}
+          </h1>
           <p className="text-sm text-zinc-400">
-            Enter your details below to get started.
+            {isVerifying 
+              ? `We sent a 6-digit code to ${verifyEmail}` 
+              : "Enter your details below to get started."}
           </p>
         </div>
 
-        <form className="flex flex-col gap-4" action={signUp}>
-          <input type="hidden" name="next" value={nextUrl} />
-          
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-zinc-300" htmlFor="email">
-              Email Address
-            </label>
-            <input
-              className="rounded-xl px-4 py-3 bg-white/5 border border-white/10 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all placeholder:text-zinc-600"
-              name="email"
-              type="email"
-              placeholder="you@example.com"
-              required
-            />
-          </div>
-
-          <div className="flex flex-col gap-2 mb-2">
-            <label className="text-sm font-medium text-zinc-300" htmlFor="password">
-              Password
-            </label>
-            <input
-              className="rounded-xl px-4 py-3 bg-white/5 border border-white/10 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all placeholder:text-zinc-600"
-              type="password"
-              name="password"
-              placeholder="••••••••"
-              required
-            />
-          </div>
-
-          <SubmitButton className="w-full bg-white text-black hover:bg-zinc-200 font-semibold rounded-xl px-4 py-3 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]" pendingText="Signing Up...">
-            Sign Up
-          </SubmitButton>
-
-          {searchParams?.message && (
-            <div className="mt-2 p-3 rounded-xl border border-indigo-500/20 bg-indigo-500/10 text-indigo-300 text-sm text-center">
-              {searchParams.message}
+        {isVerifying ? (
+          <form className="flex flex-col gap-4" action={verifyOtp}>
+            <input type="hidden" name="next" value={nextUrl} />
+            <input type="hidden" name="email" value={verifyEmail} />
+            
+            <div className="flex flex-col gap-2 mb-2">
+              <label className="text-sm font-medium text-zinc-300" htmlFor="otp">
+                Verification Code
+              </label>
+              <input
+                className="rounded-xl px-4 py-3 bg-white/5 border border-white/10 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all placeholder:text-zinc-600 text-center tracking-[0.5em] font-mono text-xl"
+                type="text"
+                name="otp"
+                placeholder="000000"
+                maxLength={6}
+                required
+              />
             </div>
-          )}
-        </form>
+
+            <SubmitButton className="w-full bg-white text-black hover:bg-zinc-200 font-semibold rounded-xl px-4 py-3 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]" pendingText="Verifying...">
+              Verify Code
+            </SubmitButton>
+
+            {searchParams?.message && (
+              <div className="mt-2 p-3 rounded-xl border border-red-500/20 bg-red-500/10 text-red-400 text-sm text-center">
+                {searchParams.message}
+              </div>
+            )}
+          </form>
+        ) : (
+          <form className="flex flex-col gap-4" action={signUp}>
+            <input type="hidden" name="next" value={nextUrl} />
+            
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-zinc-300" htmlFor="email">
+                Email Address
+              </label>
+              <input
+                className="rounded-xl px-4 py-3 bg-white/5 border border-white/10 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all placeholder:text-zinc-600"
+                name="email"
+                type="email"
+                placeholder="you@example.com"
+                required
+              />
+            </div>
+
+            <div className="flex flex-col gap-2 mb-2">
+              <label className="text-sm font-medium text-zinc-300" htmlFor="password">
+                Password
+              </label>
+              <input
+                className="rounded-xl px-4 py-3 bg-white/5 border border-white/10 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all placeholder:text-zinc-600"
+                type="password"
+                name="password"
+                placeholder="••••••••"
+                required
+              />
+            </div>
+
+            <SubmitButton className="w-full bg-white text-black hover:bg-zinc-200 font-semibold rounded-xl px-4 py-3 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]" pendingText="Signing Up...">
+              Sign Up
+            </SubmitButton>
+
+            {searchParams?.message && (
+              <div className="mt-2 p-3 rounded-xl border border-red-500/20 bg-red-500/10 text-red-400 text-sm text-center">
+                {searchParams.message}
+              </div>
+            )}
+          </form>
+        )}
         
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">
