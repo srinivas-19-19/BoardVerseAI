@@ -15,7 +15,10 @@ export default function Signup({
   const signUp = async (formData: FormData) => {
     "use server";
 
-    const origin = (await headers()).get("origin");
+    const headersList = await headers();
+    const host = headersList.get("x-forwarded-host") || headersList.get("host");
+    const protocol = headersList.get("x-forwarded-proto") || "https";
+    const origin = `${protocol}://${host}`;
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
     const nextDest = formData.get("next") as string;
@@ -43,7 +46,10 @@ export default function Signup({
   const signUpWithGoogle = async () => {
     "use server";
     const supabase = await createClient();
-    const origin = (await headers()).get("origin");
+    const headersList = await headers();
+    const host = headersList.get("x-forwarded-host") || headersList.get("host");
+    const protocol = headersList.get("x-forwarded-proto") || "https";
+    const origin = `${protocol}://${host}`;
 
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
