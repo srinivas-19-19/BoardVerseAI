@@ -2,8 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import { Excalidraw, convertToExcalidrawElements } from "@excalidraw/excalidraw";
-import type { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
-import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types/types";
+import type { ExcalidrawElement, ExcalidrawImperativeAPI } from "@excalidraw/excalidraw";
 import "@excalidraw/excalidraw/index.css";
 import { createClient } from "@/utils/supabase/client";
 
@@ -72,7 +71,7 @@ export default function ExcalidrawWrapper({ boardId }: ExcalidrawWrapperProps) {
       }
     });
 
-    channel.on("presence", { event: "cursor-update" }, () => {
+    channel.on("presence", { event: "sync" }, () => {
       const state = channel.presenceState();
       const collaborators = new Map<string, { pointer: { x: number, y: number }, button: string, selectedElementIds: Record<string, boolean>, username: string }>();
       
