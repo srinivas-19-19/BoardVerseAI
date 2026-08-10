@@ -5,11 +5,10 @@ import { redirect } from "next/navigation";
 import { SubmitButton } from "@/components/SubmitButton";
 import { Sparkles, ArrowLeft } from "lucide-react";
 
-export default function Signup({
-  searchParams,
-}: {
-  searchParams: { message?: string; next?: string; verify?: string; email?: string };
+export default async function Signup(props: {
+  searchParams: Promise<{ message?: string; next?: string; verify?: string; email?: string }>;
 }) {
+  const searchParams = await props.searchParams;
   const nextUrl = searchParams?.next || "";
   const isVerifying = searchParams?.verify === "true";
   const verifyEmail = searchParams?.email || "";
