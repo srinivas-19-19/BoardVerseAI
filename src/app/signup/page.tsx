@@ -8,7 +8,7 @@ import { Sparkles, ArrowLeft } from "lucide-react";
 export default function Signup({
   searchParams,
 }: {
-  searchParams: { message: string; next?: string };
+  searchParams: { message?: string; next?: string; verify?: string; email?: string };
 }) {
   const nextUrl = searchParams?.next || "";
   const isVerifying = searchParams?.verify === "true";
